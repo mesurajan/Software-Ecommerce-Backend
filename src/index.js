@@ -13,7 +13,7 @@ app.use(express.json());
 connectDB();
 
 // Routes
-const authRoutes = require("./routes/authRoutes");
+const authRoutes = require("./routes/UserRoutes");
 app.use("/api/auth", authRoutes);
 // app.use("/api/products", productRoutes);
 // Server

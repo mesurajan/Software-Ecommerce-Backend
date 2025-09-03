@@ -19,19 +19,6 @@ const admins = [
   },
 ];
 
-const sellers = [
-  {
-    name: 'Seller One',
-    email: 'seller1@gmail.com',
-    password: 'Seller@123',
-    address: 'NEA Seller Office 1',
-    phone: '9800003000',
-    age: 28,
-    citizenship: 'seller-1',
-    photo: '',
-  },
-];
-
 const createUsers = async () => {
   try {
     await mongoose.connect(process.env.MONGO_URI);
@@ -55,26 +42,6 @@ const createUsers = async () => {
 
       await admin.save();
       console.log(`✅ Admin created: ${admin.email}`);
-    }
-
-    // Create Sellers
-    for (const userData of sellers) {
-      const exists = await User.findOne({ email: userData.email });
-      if (exists) {
-        console.log(`❗ Seller already exists: ${userData.email}`);
-        continue;
-      }
-
-      const hashedPassword = await bcrypt.hash(userData.password, 10);
-
-      const seller = new User({
-        ...userData,
-        password: hashedPassword,
-        role: 'seller',
-      });
-
-      await seller.save();
-      console.log(`✅ Seller created: ${seller.email}`);
     }
   } catch (err) {
     console.error('❌ Error creating users:', err.message);
