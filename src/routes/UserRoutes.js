@@ -4,7 +4,7 @@ const router = express.Router();
 const authController = require("../controllers/UserAuthController");
 const authMiddleware = require("../middleware/UserAuthMiddleware");
 const roleMiddleware = require("../middleware/roleMiddleware");
-const User = require("../models/UserModels"); // ✅ MISSING earlier
+const User = require("../models/UserModels"); 
 
 // Auth routes
 router.post("/signup", authController.signup);
