@@ -8,13 +8,13 @@ require('dotenv').config({ path: path.resolve(__dirname, '../../.env') });
 
 const admins = [
   {
-    name: 'Admin One',
-    email: 'admin1@gmail.com',
+    name: 'Super Admin',
+    email: 'KeyboardEditz@gmail.com',
     password: 'Admin@123',
-    address: 'NEA HQ',
-    phone: '9800001000',
+    address: 'Lalitpur - Shankhamul',
+    phone: '9824477140',
     age: 40,
-    citizenship: 'admin-1',
+    citizenship: 'Nepali Citizen',
     photo: '',
   },
 ];

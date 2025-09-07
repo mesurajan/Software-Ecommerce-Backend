@@ -9,7 +9,7 @@ const userSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
 
-  // 👇 new field
+  
   role: {
     type: String,
     enum: ["user", "seller", "admin"],
