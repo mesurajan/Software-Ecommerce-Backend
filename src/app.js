@@ -2,8 +2,7 @@
 const express = require("express");
 const morgan = require ("morgan");
 const cors = require("cors");
-const authRoutes = require("./routes/UserRoutes");
-
+const indexRouter = require("./routes");
 const app = express();
 
 
@@ -24,7 +23,7 @@ app.use((req,  res, next)=>
 });
 
 //Routes
-app.use("/api/auth" ,authRoutes);
+app.use("/api" ,indexRouter);
 
 
 
