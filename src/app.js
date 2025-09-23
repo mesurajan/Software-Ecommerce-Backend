@@ -3,9 +3,9 @@ const express = require("express");
 const morgan = require ("morgan");
 const cors = require("cors");
 const indexRouter = require("./routes");
+const path = require("path");
+
 const app = express();
-
-
 //Middleware 
 
 app.use(cors());
@@ -24,11 +24,12 @@ app.use((req,  res, next)=>
 
 //Routes
 app.use("/api" ,indexRouter);
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 
 
 app.get("/",(req, res)=>{
-    res.send("You are Doing Greate Go a Head ");
+    res.send("Backend is running ");
 });
 
 module.exports =app;
