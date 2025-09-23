@@ -6,8 +6,6 @@ const folder = "banner"; // folder name inside uploads
 exports.createBanner = async (req, res) => {
   try {
     const { title, description, productLink, discountPercentage, subtitle, leftImage } = req.body;
-    
-    // Ensure uploaded file exists
     const image = req.file ? `/uploads/${folder}/${req.file.filename}` : null;
     if (!image) return res.status(400).json({ message: "Banner image is required" });
 
@@ -28,6 +26,7 @@ exports.createBanner = async (req, res) => {
   }
 };
 
+
 // ========================= GET ALL BANNERS =========================
 exports.getBanners = async (req, res) => {
   try {
@@ -37,6 +36,7 @@ exports.getBanners = async (req, res) => {
     res.status(500).json({ message: "Error fetching banners", error: err.message });
   }
 };
+
 
 // ========================= UPDATE BANNER =========================
 exports.updateBanner = async (req, res) => {
@@ -49,6 +49,7 @@ exports.updateBanner = async (req, res) => {
     res.status(500).json({ message: "Error updating banner", error: err.message });
   }
 };
+
 
 // ========================= DELETE BANNER =========================
 exports.deleteBanner = async (req, res) => {

@@ -14,4 +14,6 @@ const bannerSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+//pre and post method to delete image from uploads folder when banner is deleted can be added here
+
 module.exports = mongoose.model("Banner", bannerSchema);

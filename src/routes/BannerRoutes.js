@@ -8,7 +8,7 @@ const upload = require("../middleware/upload");
 
 
 // ========================= ADMIN ROUTES =========================
-// Create a new banner (Admin only)
+
 router.post(
   "/",
   authMiddleware,
@@ -17,16 +17,16 @@ router.post(
   bannerController.createBanner
 );
 
-// Update an existing banner by ID (Admin only)
+// Update an existing banner by ID 
 router.put(
   "/:id",
   authMiddleware,
   roleMiddleware(["admin"]),
-  upload("banner").single("image"), // store in uploads/banner
+  upload("banner").single("image"), 
   bannerController.updateBanner
 );
 
-// Delete a banner by ID (Admin only)
+// Delete a banner by ID
 router.delete("/:id", authMiddleware, roleMiddleware(["admin"]), bannerController.deleteBanner);
 
 // ========================= PUBLIC ROUTE =========================

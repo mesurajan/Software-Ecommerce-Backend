@@ -24,7 +24,7 @@ app.use((req,  res, next)=>
 
 //Routes
 app.use("/api" ,indexRouter);
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+app.use("/uploads/banner", express.static(path.join(__dirname, "../uploads/banner")));
 
 
 
