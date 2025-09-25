@@ -5,12 +5,14 @@ const router = express.Router();
 const authRoutes = require("./UserRoutes");
 const bannerRoutes = require("./BannerRoutes");
 const slider2Routes = require("./Slider2Routes")
-
+const latestProductRoutes = require("./latestProductRoutes")
 
 // Mount routers
-router.use("/auth", authRoutes);       // User authentication & profile routes
-router.use("/banner", bannerRoutes);   // Banner management routes
+router.use("/auth", authRoutes);       
+router.use("/banner", bannerRoutes);  
 router.use("/slider",slider2Routes );
+router.use("/latestproduct",latestProductRoutes );
+
 
 
 module.exports = router;
