@@ -5,7 +5,7 @@ const chairSchema = new mongoose.Schema({
   title: { type: String, required: true },
   price: { type: Number, required: true },
   chairimage: { type: String, required: true }, // uploaded image path
-  productLink: { type: String, required: false }, // optional product id or slug
+  productLink: { type: String, required: true }, // optional product id or slug
 });
 
 const slider2Schema = new mongoose.Schema(

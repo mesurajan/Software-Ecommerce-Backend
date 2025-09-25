@@ -1,52 +1,82 @@
-// controllers/latestProductController.js
 const LatestProduct = require("../models/LatestProduct");
-const path = require("path");
 
-// Get all
-exports.getAllLatestProducts = async (req, res) => {
-  try {
-    const products = await LatestProduct.find();
-    res.json(products);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-};
-
-// Create
 exports.createLatestProduct = async (req, res) => {
   try {
-    const { category, products } = req.body;
+    let { category, products } = req.body;
 
-    let parsedProducts = [];
-    if (products) parsedProducts = JSON.parse(products);
+    // Fix multipart/form-data -> products arrives as string
+    if (typeof products === "string") {
+      products = JSON.parse(products);
+    }
 
-    if (req.files && req.files.length) {
-      parsedProducts = parsedProducts.map((p, i) => ({
-        ...p,
-        productImage: req.files[i]
-          ? path.join("uploads", "latestproduct", req.files[i].filename)
-          : "",
+    // Attach uploaded image filenames
+    if (req.files && req.files.length > 0) {
+      products = products.map((prod, idx) => ({
+        ...prod,
+        productImage: req.files[idx]
+          ? req.files[idx].filename
+          : prod.productImage,
       }));
     }
 
-    const latestProduct = new LatestProduct({
-      category,
-      products: parsedProducts,
-    });
+    const latest = new LatestProduct({ category, products });
+    await latest.save();
 
-    await latestProduct.save();
-    res.json(latestProduct);
+    res.status(201).json(latest);
   } catch (err) {
-    res.status(400).json({ message: err.message });
+    console.error("❌ Create LatestProduct error:", err);
+    res.status(400).json({ error: err.message });
   }
 };
 
-// Delete
+exports.getLatestProducts = async (req, res) => {
+  try {
+    const data = await LatestProduct.find().sort({ createdAt: -1 });
+    res.json(data);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+exports.updateLatestProduct = async (req, res) => {
+  try {
+    let { category, products } = req.body;
+
+    if (typeof products === "string") {
+      products = JSON.parse(products);
+    }
+
+    if (req.files && req.files.length > 0) {
+      products = products.map((prod, idx) => ({
+        ...prod,
+        productImage: req.files[idx]
+          ? req.files[idx].filename
+          : prod.productImage,
+      }));
+    }
+
+    const updated = await LatestProduct.findByIdAndUpdate(
+      req.params.id,
+      { category, products },
+      { new: true }
+    );
+
+    if (!updated) return res.status(404).json({ error: "Not found" });
+
+    res.json(updated);
+  } catch (err) {
+    console.error("❌ Update LatestProduct error:", err);
+    res.status(400).json({ error: err.message });
+  }
+};
+
 exports.deleteLatestProduct = async (req, res) => {
   try {
-    await LatestProduct.findByIdAndDelete(req.params.id);
-    res.json({ message: "Latest product category deleted" });
+    const deleted = await LatestProduct.findByIdAndDelete(req.params.id);
+    if (!deleted) return res.status(404).json({ error: "Not found" });
+
+    res.json({ message: "✅ Deleted successfully" });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    res.status(500).json({ error: err.message });
   }
 };

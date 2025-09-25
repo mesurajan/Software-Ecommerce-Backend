@@ -1,27 +1,35 @@
-// routes/latestProductRoutes.js
 const express = require("express");
 const router = express.Router();
 const latestProductController = require("../controllers/latestProductController");
-const multer = require("multer");
-const path = require("path");
+const authMiddleware = require("../middleware/UserAuthMiddleware");
+const roleMiddleware = require("../middleware/roleMiddleware");
+const upload = require("../middleware/upload");
 
-// Multer setup
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, "uploads/latestproduct");
-  },
-  filename: (req, file, cb) => {
-    cb(
-      null,
-      Date.now() + "-" + file.originalname.replace(/\s+/g, "_")
-    );
-  },
-});
-const upload = multer({ storage });
+// ADMIN ROUTES
+router.post(
+  "/",
+  authMiddleware,
+  roleMiddleware(["admin"]),
+  upload("latestproducts").array("images", 10),
+  latestProductController.createLatestProduct
+);
 
-// Routes
-router.get("/", latestProductController.getAllLatestProducts);
-router.post("/", upload.array("images", 10), latestProductController.createLatestProduct);
-router.delete("/:id", latestProductController.deleteLatestProduct);
+router.put(
+  "/:id",
+  authMiddleware,
+  roleMiddleware(["admin"]),
+  upload("latestproducts").array("images", 10),
+  latestProductController.updateLatestProduct
+);
+
+router.delete(
+  "/:id",
+  authMiddleware,
+  roleMiddleware(["admin"]),
+  latestProductController.deleteLatestProduct
+);
+
+// PUBLIC ROUTES
+router.get("/", latestProductController.getLatestProducts);
 
 module.exports = router;

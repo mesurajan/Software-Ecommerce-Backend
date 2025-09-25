@@ -1,10 +1,10 @@
 const mongoose = require("mongoose");
 
 const productSchema = new mongoose.Schema({
-  productId: { type: String, required: true }, // can be product name or SKU
+  productId: { type: String, required: true }, // ✅ Added productId
   title: { type: String, required: true },
   price: { type: Number, required: true },
-  productImage: { type: String, required: true }, // uploaded image path
+  productImage: { type: String, required: true }, // file path or URL
 });
 
 const latestProductSchema = new mongoose.Schema(
