@@ -1,8 +1,10 @@
-// controllers/LatestProductController.js
-const LatestProduct = require("../models/LatestProduct");
-const path = require("path");
+// src/controllers/LatestProductController.js
+import LatestProduct from "../models/LatestProduct.js";
+import fs from "fs";
+import path from "path";
 
-exports.getLatestProducts = async (req, res) => {
+// ✅ Get all latest products
+export const getLatestProducts = async (req, res) => {
   try {
     const docs = await LatestProduct.find().sort({ createdAt: 1 });
     res.json(docs);
@@ -13,13 +15,13 @@ exports.getLatestProducts = async (req, res) => {
 };
 
 /**
- * Create or append to a category.
+ * ✅ Create or append to a category
  * Expects multipart/form-data:
  * - category (string)
  * - products (stringified JSON array) -> [{ productId, title, price, productImage }]
  * - images[] uploaded files (order corresponds to products where productImage is filename)
  */
-exports.createLatestProduct = async (req, res) => {
+export const createLatestProduct = async (req, res) => {
   try {
     const { category } = req.body;
     if (!category) return res.status(400).json({ message: "category required" });
@@ -64,8 +66,8 @@ exports.createLatestProduct = async (req, res) => {
   }
 };
 
-// Delete a single latestProduct doc by id
-exports.deleteLatestProduct = async (req, res) => {
+// ✅ Delete a whole document by _id
+export const deleteLatestProduct = async (req, res) => {
   try {
     const deleted = await LatestProduct.findByIdAndDelete(req.params.id);
     if (!deleted) return res.status(404).json({ message: "Not found" });
@@ -75,13 +77,80 @@ exports.deleteLatestProduct = async (req, res) => {
   }
 };
 
-// Delete all documents for a category (useful for admin UI "Delete category")
-exports.deleteByCategory = async (req, res) => {
+// ✅ Delete all documents for a category
+export const deleteByCategory = async (req, res) => {
   try {
     const { category } = req.params;
     const result = await LatestProduct.deleteMany({ category });
     res.json({ deletedCount: result.deletedCount });
   } catch (err) {
     res.status(500).json({ message: err.message });
+  }
+};
+
+// ✅ Update a single product inside a document
+export const updateLatestProduct = async (req, res) => {
+  try {
+    const { docId, productId } = req.params;
+    const { title, price } = req.body;
+
+    const doc = await LatestProduct.findById(docId);
+    if (!doc) return res.status(404).json({ message: "Category doc not found" });
+
+    const product = doc.products.id(productId);
+    if (!product) return res.status(404).json({ message: "Product not found" });
+
+    // update fields
+    if (title) product.title = title;
+    if (price) product.price = price;
+    if (req.file) {
+      product.productImage = `uploads/latestproducts/${req.file.filename}`;
+    }
+
+    await doc.save();
+
+    res.json({ message: "✅ Product updated", updated: product });
+  } catch (err) {
+    console.error("Update error:", err);
+    res.status(500).json({ message: "Update failed", error: err.message });
+  }
+};
+
+// ✅ Delete a single product inside a category
+export const deleteProductById = async (req, res) => {
+  try {
+    const { productId } = req.params;
+
+    // Find the category that contains this product
+    const doc = await LatestProduct.findOne({ "products._id": productId });
+    if (!doc) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+
+    // Find product inside category
+    const product = doc.products.id(productId);
+
+    // If product has an image, remove it
+    if (product?.productImage) {
+      const filePath = path.join("uploads/latestproducts", product.productImage);
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
+    }
+
+    // Remove the product from products array
+    doc.products = doc.products.filter((p) => p._id.toString() !== productId);
+
+    // Optional: delete category if empty
+    if (doc.products.length === 0) {
+      await LatestProduct.deleteOne({ _id: doc._id });
+    } else {
+      await doc.save();
+    }
+
+    res.json({ message: "Product deleted successfully" });
+  } catch (err) {
+    console.error("Delete product error:", err);
+    res.status(500).json({ message: "Server error while deleting product" });
   }
 };
