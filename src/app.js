@@ -27,7 +27,7 @@ app.use("/api" ,indexRouter);
 app.use("/uploads/banner", express.static(path.join(__dirname, "../uploads/banner")));
 app.use("/uploads/product", express.static(path.join(__dirname, "../uploads/product")));
 app.use("/uploads/latestproducts", express.static(path.join(__dirname, "../uploads/latestproducts")));
-
+app.use("/uploads/discountitems", express.static(path.join(__dirname, "../uploads/discountitems")));
 
 app.get("/",(req, res)=>{
     res.send("Backend is running ");
