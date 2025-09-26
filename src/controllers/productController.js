@@ -1,19 +1,20 @@
 const mongoose = require("mongoose");
 const Product = require("../models/Product");
-const Category = require("../models/Category"); // <-- make sure you have this model
+const Category = require("../models/Category");
 
-// Helper: resolve category (accepts id or name)
+// ---------------- Helper ----------------
 async function resolveCategory(categoryInput) {
   if (mongoose.Types.ObjectId.isValid(categoryInput)) {
-    return categoryInput; // already an ObjectId
+    return categoryInput;
   }
-  // else find by name
   const cat = await Category.findOne({ name: categoryInput });
   if (!cat) throw new Error("Invalid category: " + categoryInput);
   return cat._id;
 }
 
-// Get all products (public)
+// ---------------- Public Controllers ----------------
+
+// Get all products
 exports.getProducts = async (req, res) => {
   try {
     const products = await Product.find().populate("category", "name slug");
@@ -23,7 +24,7 @@ exports.getProducts = async (req, res) => {
   }
 };
 
-// Get single product
+// Get product by ID only (legacy route, still works)
 exports.getProductById = async (req, res) => {
   try {
     const product = await Product.findById(req.params.id).populate(
@@ -37,7 +38,30 @@ exports.getProductById = async (req, res) => {
   }
 };
 
-// Create product (admin + seller)
+// Get product details (SEO-friendly with optional slug)
+exports.getProductDetails = async (req, res) => {
+  try {
+    const { id, slug } = req.params;
+
+    const product = await Product.findById(id).populate("category", "name slug");
+    if (!product) return res.status(404).json({ message: "Product not found" });
+
+    // ✅ If slug provided & mismatch → tell frontend to redirect
+    if (slug && product.slug !== slug) {
+      return res.json({
+        redirect: `/admin/productDetails/${product._id}/${product.slug}`,
+      });
+    }
+
+    res.json(product);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// ---------------- Protected Controllers ----------------
+
+// Create product
 exports.createProduct = async (req, res) => {
   try {
     const { productId, title, price, description, category } = req.body;
@@ -47,9 +71,9 @@ exports.createProduct = async (req, res) => {
       title,
       price,
       description,
-      category: mongoose.isValidObjectId(category) ? category : category,
+      category: await resolveCategory(category),
       createdBy: req.user?._id,
-      image: req.file ? `/uploads/product/${req.file.filename}` : null, // ✅ fixed path
+      image: req.file ? `/uploads/product/${req.file.filename}` : null,
     });
 
     await product.save();
@@ -67,11 +91,19 @@ exports.updateProduct = async (req, res) => {
     if (updateData.category) {
       updateData.category = await resolveCategory(updateData.category);
     }
-    if (req.file) updateData.image = `/uploads/product/${req.file.filename}`; // ✅ fixed path
+    if (req.file) {
+      updateData.image = `/uploads/product/${req.file.filename}`;
+    }
 
-    const product = await Product.findByIdAndUpdate(req.params.id, updateData, {
-      new: true,
-    });
+    const product = await Product.findByIdAndUpdate(
+      req.params.id,
+      updateData,
+      {
+        new: true,
+        runValidators: true,
+      }
+    );
+
     if (!product) return res.status(404).json({ message: "Product not found" });
 
     res.json(product);

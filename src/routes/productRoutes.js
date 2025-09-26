@@ -8,14 +8,17 @@ const roleMiddleware = require("../middleware/roleMiddleware");
 
 // ---------------- Public Routes ----------------
 router.get("/", productController.getProducts);
-router.get("/:id", productController.getProductById);
+
+// ✅ Two routes (no `?`) to avoid path-to-regexp crash
+router.get("/:id", productController.getProductDetails);
+router.get("/:id/:slug", productController.getProductDetails);
 
 // ---------------- Protected Routes (Admin + Seller) ----------------
 router.post(
   "/",
   authMiddleware,
   roleMiddleware(["admin", "seller"]),
-  upload("product").single("image"), // ✅ saves inside /uploads/product
+  upload("product").single("image"),
   productController.createProduct
 );
 
@@ -23,7 +26,7 @@ router.put(
   "/:id",
   authMiddleware,
   roleMiddleware(["admin", "seller"]),
-  upload("product").single("image"), // ✅ saves inside /uploads/product
+  upload("product").single("image"),
   productController.updateProduct
 );
 
