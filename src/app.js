@@ -30,6 +30,7 @@ app.use("/uploads/latestproducts", express.static(path.join(__dirname, "../uploa
 app.use("/uploads/discountitems", express.static(path.join(__dirname, "../uploads/discountitems")));
 app.use("/uploads/topcategories", express.static(path.join(__dirname, "../uploads/topcategories")));
 
+
 app.get("/",(req, res)=>{
     res.send("Backend is running ");
 });
