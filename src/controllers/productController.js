@@ -162,3 +162,24 @@ exports.deleteProduct = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+
+
+// GET /api/products/by-category/:categoryId?search=keyword
+exports.getProductsByCategory = async (req, res) => {
+  try {
+    const { categoryId } = req.params;
+    const { search } = req.query;
+
+    let query = { "category._id": categoryId }; // adjust if category is saved differently
+
+    if (search) {
+      query.title = { $regex: search, $options: "i" }; // case-insensitive search
+    }
+
+    const products = await Product.find(query).select("title price image slug");
+    res.json(products);
+  } catch (err) {
+    console.error("Error fetching products by category:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+};

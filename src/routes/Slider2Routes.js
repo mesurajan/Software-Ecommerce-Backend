@@ -1,3 +1,4 @@
+// routes/Slider2Routes.js
 const express = require("express");
 const router = express.Router();
 const sliderController = require("../controllers/Slider2Controller");
@@ -5,7 +6,7 @@ const authMiddleware = require("../middleware/UserAuthMiddleware");
 const roleMiddleware = require("../middleware/roleMiddleware");
 const upload = require("../middleware/upload");
 
-// ADMIN ROUTES
+// --- ADMIN ROUTES ---
 router.post(
   "/",
   authMiddleware,
@@ -29,7 +30,7 @@ router.delete(
   sliderController.deleteSlider
 );
 
-// PUBLIC ROUTES
+// --- PUBLIC ROUTES ---
 router.get("/", sliderController.getSliders);
 
 module.exports = router;

@@ -12,6 +12,7 @@ router.get("/", productController.getProducts);
 // ✅ Two routes (no `?`) to avoid path-to-regexp crash
 router.get("/:id", productController.getProductDetails);
 router.get("/:id/:slug", productController.getProductDetails);
+router.get("/by-category/:categoryId", productController.getProductsByCategory);
 
 // ---------------- Protected Routes (Admin + Seller) ----------------
 router.post(
