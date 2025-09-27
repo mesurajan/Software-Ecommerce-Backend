@@ -18,7 +18,7 @@ router.post(
   "/",
   authMiddleware,
   roleMiddleware(["admin", "seller"]),
-  upload("product").single("image"),
+  upload("product").single("image"), // ✅ single file
   productController.createProduct
 );
 
@@ -26,7 +26,7 @@ router.put(
   "/:id",
   authMiddleware,
   roleMiddleware(["admin", "seller"]),
-  upload("product").single("image"),
+  upload("product").single("image"), // ✅ single file
   productController.updateProduct
 );
 

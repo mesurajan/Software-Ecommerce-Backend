@@ -24,7 +24,7 @@ exports.getProducts = async (req, res) => {
   }
 };
 
-// Get product by ID only (legacy route, still works)
+// Get product by ID only (legacy route)
 exports.getProductById = async (req, res) => {
   try {
     const product = await Product.findById(req.params.id).populate(
@@ -42,11 +42,11 @@ exports.getProductById = async (req, res) => {
 exports.getProductDetails = async (req, res) => {
   try {
     const { id, slug } = req.params;
-
     const product = await Product.findById(id).populate("category", "name slug");
+
     if (!product) return res.status(404).json({ message: "Product not found" });
 
-    // ✅ If slug provided & mismatch → tell frontend to redirect
+    // ✅ If slug mismatch → tell frontend to redirect
     if (slug && product.slug !== slug) {
       return res.json({
         redirect: `/admin/productDetails/${product._id}/${product.slug}`,
@@ -64,16 +64,54 @@ exports.getProductDetails = async (req, res) => {
 // Create product
 exports.createProduct = async (req, res) => {
   try {
-    const { productId, title, price, description, category } = req.body;
+    const {
+      productId,
+      title,
+      subtitle,
+      description,
+      additionalInfo,
+      price,
+      oldPrice,
+      discount,
+      stock,
+      brand,
+      sku,
+      weight,
+      length,
+      width,
+      height,
+      material,
+      warranty,
+      delivery,
+      colors,
+      videoUrl,
+      category,
+    } = req.body;
 
     const product = new Product({
       productId,
       title,
-      price,
+      subtitle,
       description,
+      additionalInfo,
+      price,
+      oldPrice,
+      discount,
+      stock,
+      brand,
+      sku,
+      weight,
+      length,
+      width,
+      height,
+      material,
+      warranty,
+      delivery,
+      colors: Array.isArray(colors) ? colors : colors ? [colors] : [],
+      videoUrl,
       category: await resolveCategory(category),
       createdBy: req.user?._id,
-      image: req.file ? `/uploads/product/${req.file.filename}` : null,
+      image: req.file ? `/uploads/product/${req.file.filename}` : null, // ✅ single image
     });
 
     await product.save();
@@ -91,18 +129,20 @@ exports.updateProduct = async (req, res) => {
     if (updateData.category) {
       updateData.category = await resolveCategory(updateData.category);
     }
+
     if (req.file) {
       updateData.image = `/uploads/product/${req.file.filename}`;
     }
 
-    const product = await Product.findByIdAndUpdate(
-      req.params.id,
-      updateData,
-      {
-        new: true,
-        runValidators: true,
-      }
-    );
+    // ✅ Ensure colors is always an array
+    if (updateData.colors && !Array.isArray(updateData.colors)) {
+      updateData.colors = [updateData.colors];
+    }
+
+    const product = await Product.findByIdAndUpdate(req.params.id, updateData, {
+      new: true,
+      runValidators: true,
+    });
 
     if (!product) return res.status(404).json({ message: "Product not found" });
 
