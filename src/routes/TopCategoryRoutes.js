@@ -1,8 +1,8 @@
 const express = require("express");
 const router = express.Router();
 const upload = require("../middleware/upload");
-const authMiddleware = require("../middleware/UserAuthMiddleware"); // ✅ like slider2
-const roleMiddleware = require("../middleware/roleMiddleware");     // ✅ same as slider2
+const authMiddleware = require("../middleware/UserAuthMiddleware");
+const roleMiddleware = require("../middleware/roleMiddleware");
 const {
   getTopCategories,
   createTopCategory,
@@ -10,15 +10,15 @@ const {
   deleteTopCategory,
 } = require("../controllers/TopCategoryController");
 
-// PUBLIC
+// --- PUBLIC ---
 router.get("/", getTopCategories);
 
-// ADMIN
+// --- ADMIN (secure) ---
 router.post(
   "/",
   authMiddleware,
   roleMiddleware(["admin"]),
-  upload("topcategories").array("images", 4), // ✅ allow 4 images
+  upload("topcategories").array("images", 4), // up to 4 images per category
   createTopCategory
 );
 

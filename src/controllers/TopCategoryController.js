@@ -1,74 +1,82 @@
+// controllers/TopCategoryController.js
 const TopCategory = require("../models/TopCategory");
 
-// ✅ Get all
 exports.getTopCategories = async (req, res) => {
   try {
-    const categories = await TopCategory.find();
+    const categories = await TopCategory.find().populate(
+      "chairs.product",
+      "title slug _id"
+    );
     res.json(categories);
   } catch (err) {
-    res.status(500).json({ message: "Error fetching categories", error: err });
+    res
+      .status(500)
+      .json({ message: "Error fetching categories", error: err.message });
   }
 };
 
-// ✅ Create
 exports.createTopCategory = async (req, res) => {
   try {
     const { title, chairs } = req.body;
-    let parsedChairs = [];
 
-    if (chairs) {
-      parsedChairs = JSON.parse(chairs);
-      if (req.files && req.files.length > 0) {
-        parsedChairs = parsedChairs.map((c, i) => ({
-          ...c,
-          chairimage: req.files[i] ? `uploads/topcategories/${req.files[i].filename}` : c.chairimage,
-        }));
-      }
-    }
+    // Handle uploaded images
+    const images = req.files || [];
+    let parsedChairs = JSON.parse(chairs);
 
-    const newCategory = new TopCategory({ title, chairs: parsedChairs });
-    await newCategory.save();
+    parsedChairs = parsedChairs.map((chair, idx) => ({
+      ...chair,
+      chairimage: images[idx] ? `/uploads/topcategories/${images[idx].filename}` : chair.chairimage,
+    }));
 
-    res.status(201).json(newCategory);
+    const category = new TopCategory({
+      title,
+      chairs: parsedChairs,
+    });
+
+    await category.save();
+    res.json(category);
   } catch (err) {
-    res.status(500).json({ message: "Error creating category", error: err });
+    res
+      .status(400)
+      .json({ message: "Error creating category", error: err.message });
   }
 };
 
-// ✅ Update
 exports.updateTopCategory = async (req, res) => {
   try {
+    const { id } = req.params;
     const { title, chairs } = req.body;
-    let parsedChairs = [];
 
-    if (chairs) {
-      parsedChairs = JSON.parse(chairs);
-      if (req.files && req.files.length > 0) {
-        parsedChairs = parsedChairs.map((c, i) => ({
-          ...c,
-          chairimage: req.files[i] ? `uploads/topcategories/${req.files[i].filename}` : c.chairimage,
-        }));
-      }
-    }
+    const images = req.files || [];
+    let parsedChairs = JSON.parse(chairs);
+
+    parsedChairs = parsedChairs.map((chair, idx) => ({
+      ...chair,
+      chairimage: images[idx] ? `/uploads/topcategories/${images[idx].filename}` : chair.chairimage,
+    }));
 
     const updated = await TopCategory.findByIdAndUpdate(
-      req.params.id,
+      id,
       { title, chairs: parsedChairs },
       { new: true }
     );
 
     res.json(updated);
   } catch (err) {
-    res.status(500).json({ message: "Error updating category", error: err });
+    res
+      .status(400)
+      .json({ message: "Error updating category", error: err.message });
   }
 };
 
-// ✅ Delete
 exports.deleteTopCategory = async (req, res) => {
   try {
-    await TopCategory.findByIdAndDelete(req.params.id);
+    const { id } = req.params;
+    await TopCategory.findByIdAndDelete(id);
     res.json({ message: "Category deleted" });
   } catch (err) {
-    res.status(500).json({ message: "Error deleting category", error: err });
+    res
+      .status(400)
+      .json({ message: "Error deleting category", error: err.message });
   }
 };
