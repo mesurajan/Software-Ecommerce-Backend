@@ -1,18 +1,22 @@
-// routes/LatestProductRoutes.js
 const express = require("express");
 const router = express.Router();
-const controller = require("../controllers/latestProductController");
-const authMiddleware = require("../middleware/UserAuthMiddleware");
-const roleMiddleware = require("../middleware/roleMiddleware");
-const upload = require("../middleware/upload");
+const controller = require("../controllers/latestProductController.js");
+const authMiddleware = require("../middleware/UserAuthMiddleware.js");
+const roleMiddleware = require("../middleware/roleMiddleware.js");
+const upload = require("../middleware/upload.js");
+
+// --- PUBLIC ---
+router.get("/", controller.getLatestProducts);
+
+// --- ADMIN (secure) ---
 
 // ✅ Admin create (append/create)
-// allows manual override images
+// allows uploading up to 10 chairimages
 router.post(
   "/",
   authMiddleware,
   roleMiddleware(["admin"]),
-  upload("latestproducts").array("images", 10),
+  upload("latestproducts").array("chairimage", 10), // 👈 field name = "chairimage"
   controller.createLatestProduct
 );
 
@@ -21,7 +25,7 @@ router.put(
   "/:docId/product/:productId",
   authMiddleware,
   roleMiddleware(["admin"]),
-  upload("latestproducts").single("image"),
+  upload("latestproducts").single("chairimage"), // 👈 field name = "chairimage"
   controller.updateLatestProduct
 );
 
@@ -48,8 +52,5 @@ router.delete(
   roleMiddleware(["admin"]),
   controller.deleteByCategory
 );
-
-// ✅ Public: get all latest products
-router.get("/", controller.getLatestProducts);
 
 module.exports = router;

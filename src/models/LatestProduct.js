@@ -1,26 +1,34 @@
 // models/LatestProduct.js
 const mongoose = require("mongoose");
 
-const LatestProductItemSchema = new mongoose.Schema({
-  product: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Product",
-    required: true,
-  },
-  productSlug: { type: String, required: true }, // copied from Product
-  overrideImage: { type: String }, // optional admin-uploaded image
-});
+const latestProductItemSchema = new mongoose.Schema(
+  {
+    // --- Denormalized snapshot for fast render ---
+    title: { type: String, required: true }, // product title snapshot
+    price: { type: Number, required: true }, // product price snapshot
+    chairimage: { type: String, required: true }, // uploaded or fallback image
 
-const LatestProductSchema = new mongoose.Schema(
+    // --- Reference to Product for sync ---
+    product: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Product",
+      required: true,
+    },
+    productSlug: { type: String }, // store slug for SEO/navigation
+  },
+  { _id: false } // ✅ prevent auto _id on subdocuments
+);
+
+const latestProductSchema = new mongoose.Schema(
   {
     category: {
       type: String,
       enum: ["New Arrivals", "Best Seller", "Featured", "Special Offer"],
       required: true,
     },
-    products: [LatestProductItemSchema],
+    products: [latestProductItemSchema],
   },
   { timestamps: true }
 );
 
-module.exports = mongoose.model("LatestProduct", LatestProductSchema);
+module.exports = mongoose.model("LatestProduct", latestProductSchema);
