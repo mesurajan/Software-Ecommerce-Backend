@@ -37,12 +37,12 @@ export const getLatestProducts = async (req, res) => {
  * - products (stringified JSON array) -> [{ productId }]
  * - images[] uploaded files (optional, chairimage)
  */
+// CREATE or APPEND
 export const createLatestProduct = async (req, res) => {
   try {
     const { category } = req.body;
     if (!category) return res.status(400).json({ message: "category required" });
 
-    // Parse products array
     let parsedProducts = [];
     if (req.body.products) {
       try {
@@ -64,12 +64,12 @@ export const createLatestProduct = async (req, res) => {
       if (!productDoc) continue;
 
       finalProducts.push({
-        _id: prod.productId, // ✅ enforce productId as embedded _id
+        _id: prod.productId, // ✅ force _id = Product._id
         product: prod.productId,
         productSlug: productDoc.slug,
         title: productDoc.title,
         price: productDoc.price,
-        chairimage: uploaded[i] || null,
+        chairimage: uploaded[i] || "/uploads/default/lightimage.png",
       });
     }
 
@@ -83,10 +83,7 @@ export const createLatestProduct = async (req, res) => {
       return res.status(200).json(existing);
     }
 
-    const newDoc = new LatestProduct({
-      category,
-      products: finalProducts,
-    });
+    const newDoc = new LatestProduct({ category, products: finalProducts });
     await newDoc.save();
 
     res.status(201).json(newDoc);
@@ -118,11 +115,10 @@ export const deleteByCategory = async (req, res) => {
   }
 };
 
-// ✅ Update a single product inside a LatestProduct document
+// UPDATE single product
 export const updateLatestProduct = async (req, res) => {
   try {
     const { docId, productId } = req.params;
-    const { productSlug } = req.body;
 
     const doc = await LatestProduct.findById(docId);
     if (!doc) return res.status(404).json({ message: "Category doc not found" });
@@ -130,26 +126,14 @@ export const updateLatestProduct = async (req, res) => {
     const product = doc.products.find((p) => p._id.toString() === productId);
     if (!product) return res.status(404).json({ message: "Product not found" });
 
-    if (productSlug) product.productSlug = productSlug;
+    if (req.body.productSlug) product.productSlug = req.body.productSlug;
 
-    // ✅ If new file uploaded, replace chairimage and delete old file
     if (req.file) {
       const newPath = `uploads/latestproducts/${req.file.filename}`.replace(/\\/g, "/");
-
-      if (product.chairimage) {
-        const oldPath = path.join(process.cwd(), product.chairimage);
-        try {
-          fs.unlinkSync(oldPath);
-        } catch {
-          console.warn("⚠️ Old image not found to delete:", oldPath);
-        }
-      }
-
       product.chairimage = newPath;
     }
 
     await doc.save();
-
     res.json({ message: "✅ Product updated", updated: product });
   } catch (err) {
     console.error("Update error:", err);

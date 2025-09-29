@@ -1,22 +1,28 @@
-// models/LatestProduct.js
 const mongoose = require("mongoose");
 
 const latestProductItemSchema = new mongoose.Schema(
   {
-    // --- Denormalized snapshot for fast render ---
-    title: { type: String, required: true }, // product title snapshot
-    price: { type: Number, required: true }, // product price snapshot
-    chairimage: { type: String, required: true }, // uploaded or fallback image
+    // ✅ Force _id = Product._id (no random new ObjectId)
+    _id: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Product",
+      required: true,
+    },
 
-    // --- Reference to Product for sync ---
+    // Snapshot for fast rendering
+    title: { type: String, required: true },
+    price: { type: Number, required: true },
+    chairimage: { type: String, required: true },
+
+    // Reference
     product: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Product",
       required: true,
     },
-    productSlug: { type: String }, // store slug for SEO/navigation
+    productSlug: { type: String },
   },
-  { _id: false } // ✅ prevent auto _id on subdocuments
+  { _id: false } // prevent Mongoose from creating another _id
 );
 
 const latestProductSchema = new mongoose.Schema(

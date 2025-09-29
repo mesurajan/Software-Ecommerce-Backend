@@ -6,30 +6,30 @@ const roleMiddleware = require("../middleware/roleMiddleware.js");
 const upload = require("../middleware/upload.js");
 
 // --- PUBLIC ---
+// Get all latest products (grouped by category)
 router.get("/", controller.getLatestProducts);
 
 // --- ADMIN (secure) ---
 
-// ✅ Admin create (append/create)
-// allows uploading up to 10 chairimages
+// ✅ Create or append products to a category
 router.post(
   "/",
   authMiddleware,
   roleMiddleware(["admin"]),
-  upload("latestproducts").array("chairimage", 10), // 👈 field name = "chairimage"
+  upload("latestproducts").array("chairimage", 10),
   controller.createLatestProduct
 );
 
-// ✅ Admin update single product inside a category doc
+// ✅ Update a single product inside a category doc
 router.put(
   "/:docId/product/:productId",
   authMiddleware,
   roleMiddleware(["admin"]),
-  upload("latestproducts").single("chairimage"), // 👈 field name = "chairimage"
+  upload("latestproducts").single("chairimage"),
   controller.updateLatestProduct
 );
 
-// ✅ Admin delete single product inside category doc
+// ✅ Delete a single product by productId (across category docs)
 router.delete(
   "/product/:productId",
   authMiddleware,
@@ -37,7 +37,7 @@ router.delete(
   controller.deleteProductById
 );
 
-// ✅ Admin delete whole doc by id
+// ✅ Delete whole category document by MongoDB _id
 router.delete(
   "/:id",
   authMiddleware,
@@ -45,7 +45,7 @@ router.delete(
   controller.deleteLatestProduct
 );
 
-// ✅ Admin delete all docs for a category
+// ✅ Delete all docs for a given category name
 router.delete(
   "/category/:category",
   authMiddleware,
