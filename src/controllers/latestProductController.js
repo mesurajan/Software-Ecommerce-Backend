@@ -1,15 +1,36 @@
 // src/controllers/LatestProductController.js
 import LatestProduct from "../models/LatestProduct.js";
+import Product from "../models/Product.js";
 import fs from "fs";
 import path from "path";
 
 // ✅ Get all latest products
 export const getLatestProducts = async (req, res) => {
   try {
-    const docs = await LatestProduct.find().sort({ createdAt: 1 });
-    res.json(docs);
+    const docs = await LatestProduct.find()
+      .populate("products.product", "title price images slug")
+      .sort({ createdAt: -1 });
+
+    const normalized = docs.map((doc) => ({
+      _id: doc._id,
+      category: doc.category,
+      products: doc.products.map((p) => ({
+        _id: p._id,
+        productId: p.product?._id || null,
+        title: p.product?.title || "Unknown",
+        price: p.product?.price || 0,
+        slug: p.productSlug || p.product?.slug || "",
+        image: p.overrideImage
+          ? `/${p.overrideImage.replace(/\\/g, "/")}`
+          : p.product?.images?.[0]
+          ? `/uploads/products/${p.product.images[0].replace(/\\/g, "/")}`
+          : "/uploads/Default/lightimage.png",
+      })),
+    }));
+
+    res.json(normalized);
   } catch (err) {
-    console.error(err);
+    console.error("Error fetching latest products:", err);
     res.status(500).json({ message: err.message });
   }
 };
@@ -18,34 +39,42 @@ export const getLatestProducts = async (req, res) => {
  * ✅ Create or append to a category
  * Expects multipart/form-data:
  * - category (string)
- * - products (stringified JSON array) -> [{ productId, title, price, productImage }]
- * - images[] uploaded files (order corresponds to products where productImage is filename)
+ * - products (stringified JSON array) -> [{ productId }]
+ * - images[] uploaded files (optional, override product.image)
  */
 export const createLatestProduct = async (req, res) => {
   try {
     const { category } = req.body;
     if (!category) return res.status(400).json({ message: "category required" });
 
-    // parse products JSON (from multipart/form-data)
+    // Parse products array
     let parsedProducts = [];
     if (req.body.products) {
-      parsedProducts = JSON.parse(req.body.products);
+      try {
+        parsedProducts = JSON.parse(req.body.products);
+      } catch (e) {
+        return res.status(400).json({ message: "Invalid products JSON" });
+      }
     }
 
-    // map uploaded files to paths
+    // Map uploaded files
     const uploaded = (req.files || []).map((f) =>
-      path.join("uploads", "latestproducts", f.filename).replace(/\\/g, "/")
+      f.filename ? `uploads/latestproducts/${f.filename}`.replace(/\\/g, "/") : null
     );
 
-    // Build final product objects (use uploaded image path if available)
-    const finalProducts = parsedProducts.map((p, idx) => ({
-      productId: p.productId || p.id || "",
-      title: p.title || "",
-      price: Number(p.price || 0),
-      productImage: uploaded[idx] || p.productImage || "",
-    }));
+    const finalProducts = [];
+    for (let i = 0; i < parsedProducts.length; i++) {
+      const prod = parsedProducts[i];
+      const productDoc = await Product.findById(prod.productId).select("slug");
+      if (!productDoc) continue;
 
-    // If category exists -> append products
+      finalProducts.push({
+        product: prod.productId,
+        productSlug: productDoc.slug,
+        overrideImage: uploaded[i] || null,
+      });
+    }
+
     let existing = await LatestProduct.findOne({ category });
     if (existing) {
       existing.products.push(...finalProducts);
@@ -53,15 +82,15 @@ export const createLatestProduct = async (req, res) => {
       return res.status(200).json(existing);
     }
 
-    // else create new
     const newDoc = new LatestProduct({
       category,
       products: finalProducts,
     });
     await newDoc.save();
+
     res.status(201).json(newDoc);
   } catch (err) {
-    console.error(err);
+    console.error("Create LatestProduct error:", err);
     res.status(400).json({ error: err.message || err });
   }
 };
@@ -88,11 +117,11 @@ export const deleteByCategory = async (req, res) => {
   }
 };
 
-// ✅ Update a single product inside a document
+// ✅ Update a single product inside a LatestProduct document
 export const updateLatestProduct = async (req, res) => {
   try {
     const { docId, productId } = req.params;
-    const { title, price } = req.body;
+    const { productSlug } = req.body;
 
     const doc = await LatestProduct.findById(docId);
     if (!doc) return res.status(404).json({ message: "Category doc not found" });
@@ -100,11 +129,23 @@ export const updateLatestProduct = async (req, res) => {
     const product = doc.products.id(productId);
     if (!product) return res.status(404).json({ message: "Product not found" });
 
-    // update fields
-    if (title) product.title = title;
-    if (price) product.price = price;
+    // ✅ Update slug if provided
+    if (productSlug) product.productSlug = productSlug;
+
+    // ✅ If new file uploaded, replace overrideImage and delete old file
     if (req.file) {
-      product.productImage = `uploads/latestproducts/${req.file.filename}`;
+      const newPath = `uploads/latestproducts/${req.file.filename}`.replace(/\\/g, "/");
+
+      if (product.overrideImage) {
+        const oldPath = path.join(process.cwd(), product.overrideImage);
+        try {
+          fs.unlinkSync(oldPath);
+        } catch (e) {
+          console.warn("⚠️ Old image not found to delete:", oldPath);
+        }
+      }
+
+      product.overrideImage = newPath;
     }
 
     await doc.save();
@@ -121,27 +162,26 @@ export const deleteProductById = async (req, res) => {
   try {
     const { productId } = req.params;
 
-    // Find the category that contains this product
     const doc = await LatestProduct.findOne({ "products._id": productId });
     if (!doc) {
       return res.status(404).json({ message: "Product not found" });
     }
 
-    // Find product inside category
     const product = doc.products.id(productId);
 
-    // If product has an image, remove it
-    if (product?.productImage) {
-      const filePath = path.join("uploads/latestproducts", product.productImage);
+    if (product?.overrideImage) {
+      const filePath = path.join(process.cwd(), product.overrideImage);
       if (fs.existsSync(filePath)) {
-        fs.unlinkSync(filePath);
+        try {
+          fs.unlinkSync(filePath);
+        } catch (e) {
+          console.warn("⚠️ Failed to delete override image:", filePath);
+        }
       }
     }
 
-    // Remove the product from products array
     doc.products = doc.products.filter((p) => p._id.toString() !== productId);
 
-    // Optional: delete category if empty
     if (doc.products.length === 0) {
       await LatestProduct.deleteOne({ _id: doc._id });
     } else {

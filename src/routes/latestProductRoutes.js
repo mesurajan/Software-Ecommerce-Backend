@@ -6,8 +6,8 @@ const authMiddleware = require("../middleware/UserAuthMiddleware");
 const roleMiddleware = require("../middleware/roleMiddleware");
 const upload = require("../middleware/upload");
 
-// Admin create (append to existing category or create new)
-// images uploaded to uploads/latestproducts
+// ✅ Admin create (append/create)
+// allows manual override images
 router.post(
   "/",
   authMiddleware,
@@ -16,7 +16,24 @@ router.post(
   controller.createLatestProduct
 );
 
-// Admin delete single doc by id
+// ✅ Admin update single product inside a category doc
+router.put(
+  "/:docId/product/:productId",
+  authMiddleware,
+  roleMiddleware(["admin"]),
+  upload("latestproducts").single("image"),
+  controller.updateLatestProduct
+);
+
+// ✅ Admin delete single product inside category doc
+router.delete(
+  "/product/:productId",
+  authMiddleware,
+  roleMiddleware(["admin"]),
+  controller.deleteProductById
+);
+
+// ✅ Admin delete whole doc by id
 router.delete(
   "/:id",
   authMiddleware,
@@ -24,7 +41,7 @@ router.delete(
   controller.deleteLatestProduct
 );
 
-// Admin delete category (delete all docs for that category)
+// ✅ Admin delete all docs for a category
 router.delete(
   "/category/:category",
   authMiddleware,
@@ -32,7 +49,7 @@ router.delete(
   controller.deleteByCategory
 );
 
-// Public: get all
+// ✅ Public: get all latest products
 router.get("/", controller.getLatestProducts);
 
 module.exports = router;
