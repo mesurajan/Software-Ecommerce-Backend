@@ -29,7 +29,7 @@ app.use("/uploads/product", express.static(path.join(__dirname, "../uploads/prod
 app.use("/uploads/latestproducts", express.static(path.join(__dirname, "../uploads/latestproducts")));
 app.use("/uploads/discountitems", express.static(path.join(__dirname, "../uploads/discountitems")));
 app.use("/uploads/topcategories", express.static(path.join(__dirname, "../uploads/topcategories")));
-
+app.use("/uploads/trendingProducts", express.static(path.join(__dirname, "../uploads/trendingProducts")));
 
 app.get("/",(req, res)=>{
     res.send("Backend is running ");
