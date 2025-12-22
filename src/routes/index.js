@@ -11,6 +11,8 @@ const topCategoryRoutes = require("./TopCategoryRoutes"); // ✅ Import Top Cate
 const productRoutes = require("./productRoutes");
 const categoryRoutes = require("./categoryRoutes");
 const trendingProductRoutes = require("./trendingProductRoutes");
+const paymentRoutes = require("./paymentRoutes")
+
 
 // Mount routers
 router.use("/auth", authRoutes);
@@ -22,5 +24,7 @@ router.use("/topcategories", topCategoryRoutes); // ✅ Add new topcategories AP
 router.use("/products", productRoutes);
 router.use("/categories", categoryRoutes);
 router.use("/trendingproducts", trendingProductRoutes);
+router.use("/payment", paymentRoutes);
+
 
 module.exports = router;
