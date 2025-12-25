@@ -12,8 +12,8 @@ const productRoutes = require("./productRoutes");
 const categoryRoutes = require("./categoryRoutes");
 const trendingProductRoutes = require("./trendingProductRoutes");
 const paymentRoutes = require("./paymentRoutes")
-
-
+const orderRoutes = require("./orderRoutes");
+const UserProfileRoutes =require("./UserProfileRoutes");
 // Mount routers
 router.use("/auth", authRoutes);
 router.use("/banner", bannerRoutes);
@@ -25,6 +25,7 @@ router.use("/products", productRoutes);
 router.use("/categories", categoryRoutes);
 router.use("/trendingproducts", trendingProductRoutes);
 router.use("/payment", paymentRoutes);
-
+router.use("/orders", orderRoutes);
+router.use("/profile",UserProfileRoutes);
 
 module.exports = router;

@@ -2,6 +2,8 @@ const mongoose = require("mongoose");
 
 const orderSchema = new mongoose.Schema(
   {
+   
+
     items: [
       {
         productId: String,
@@ -13,6 +15,7 @@ const orderSchema = new mongoose.Schema(
 
     shipping: {
       name: String,
+      email:String,
       phone: String,
       address: String,
     },

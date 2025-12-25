@@ -31,6 +31,8 @@ app.use("/uploads/discountitems", express.static(path.join(__dirname, "../upload
 app.use("/uploads/topcategories", express.static(path.join(__dirname, "../uploads/topcategories")));
 app.use("/uploads/trendingProducts", express.static(path.join(__dirname, "../uploads/trendingProducts")));
 
+
+
 app.get("/",(req, res)=>{
     res.send("Backend is running ");
 });
