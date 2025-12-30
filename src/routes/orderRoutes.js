@@ -4,15 +4,17 @@ const {
   getAllOrders,
   getOrderById,
   getMyOrders,
+  createOrder,
 } = require("../controllers/orderController");
 
-const requireAuth = require("../middleware/userauthmiddleware");
-
+const authMiddleware = require("../middleware/UserAuthMiddleware");
+// CREATE order (after payment)
+router.post("/", authMiddleware, createOrder);
 // Admin / debug
 router.get("/", getAllOrders);
 
 // Logged-in user
-router.get("/my", requireAuth, getMyOrders);
+router.get("/my", authMiddleware, getMyOrders);
 
 // Single order
 router.get("/:id", getOrderById);

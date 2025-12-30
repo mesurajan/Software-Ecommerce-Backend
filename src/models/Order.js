@@ -2,7 +2,12 @@ const mongoose = require("mongoose");
 
 const orderSchema = new mongoose.Schema(
   {
-   
+    // 🔥 THIS IS THE FIX
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
 
     items: [
       {
@@ -15,7 +20,7 @@ const orderSchema = new mongoose.Schema(
 
     shipping: {
       name: String,
-      email:String,
+      email: String,
       phone: String,
       address: String,
     },

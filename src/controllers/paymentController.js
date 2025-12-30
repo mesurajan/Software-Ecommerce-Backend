@@ -17,6 +17,7 @@ const initiateEsewaPayment = async (req, res) => {
     const transaction_uuid = uuidv4();
 
     await Order.create({
+      user: req.user._id,     
       items,
       shipping,
       subtotal,
@@ -61,21 +62,28 @@ const initiateEsewaPayment = async (req, res) => {
 
 // 2️⃣ Success callback
 const esewaSuccess = async (req, res) => {
-  const { transaction_uuid } = req.query;
+  try {
+    const { data } = req.query; // data is base64 or JSON string
+    const parsed = JSON.parse(Buffer.from(data, "base64").toString());
+    const { transaction_uuid } = parsed;
 
-  await Order.findOneAndUpdate(
-    { transaction_uuid },
-    { paymentStatus: "PAID" }
-  );
+    await Order.findOneAndUpdate(
+      { transaction_uuid },
+      { paymentStatus: "PAID" }
+    );
 
-  res.redirect("http://localhost:5173/payment-success");
+    res.redirect("http://localhost:5173/payment-success");
+  } catch (err) {
+    console.error(err);
+    res.redirect("http://localhost:5173/payment-failed");
+  }
 };
 
 // 3️⃣ Failure callback
 const esewaFailure = async (req, res) => {
+  console.warn("eSewa payment failed", req.query);
   res.redirect("http://localhost:5173/payment-failed");
 };
-
 // ✅ EXPORTS
 module.exports = {
   initiateEsewaPayment,

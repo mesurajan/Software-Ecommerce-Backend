@@ -60,9 +60,36 @@ const getMyOrders = async (req, res) => {
   }
 };
 
+// CREATE order (after payment success)
+const createOrder = async (req, res) => {
+  try {
+    const order = await Order.create({
+      user: req.user._id, // 🔥 REQUIRED
+      items: req.body.items,
+      shipping: req.body.shipping,
+      subtotal: req.body.subtotal,
+      deliveryFee: req.body.deliveryFee,
+      total: req.body.total,
+      paymentMethod: req.body.paymentMethod || "ESEWA",
+      paymentStatus: "PAID",
+      transaction_uuid: req.body.transaction_uuid,
+    });
+
+    res.status(201).json({
+      success: true,
+      order,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
 
 module.exports = {
   getAllOrders,
   getOrderById,
   getMyOrders,
+  createOrder,
 };

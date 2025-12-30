@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-
+const authMiddleware = require("../middleware/UserAuthMiddleware");
 const {
   initiateEsewaPayment,
   esewaSuccess,
@@ -8,7 +8,8 @@ const {
 } = require("../controllers/paymentController");
 
 // Create payment
-router.post("/esewa/initiate", initiateEsewaPayment);
+
+router.post("/esewa/initiate", authMiddleware, initiateEsewaPayment);
 
 
 
