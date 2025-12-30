@@ -44,4 +44,12 @@ const orderSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+// 🔹 Ensure COD orders are always pending
+orderSchema.pre("save", function (next) {
+  if (this.paymentMethod === "COD") {
+    this.paymentStatus = "PENDING";
+  }
+  next();
+});
+
 module.exports = mongoose.model("Order", orderSchema);

@@ -9,7 +9,34 @@ const generateEsewaSignature = (message, secret) => {
     .digest("base64");
 };
 
-// 1️⃣ Initiate Payment
+// 1️⃣ Create COD Order
+const createCODOrder = async (req, res) => {
+  try {
+    const { items, shipping, subtotal, deliveryFee, total } = req.body;
+
+    const orderId = `COD-${Date.now()}`;
+
+    // COD order: paymentStatus always PENDING
+    const order = await Order.create({
+      user: req.user._id,
+      items,
+      shipping,
+      subtotal,
+      deliveryFee,
+      total,
+      paymentMethod: "COD",
+      paymentStatus: "PENDING",
+      orderId,
+    });
+
+    res.json({ success: true, message: "COD order created", order });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// 2️⃣ Initiate eSewa Payment
 const initiateEsewaPayment = async (req, res) => {
   try {
     const { items, shipping, subtotal, deliveryFee, total } = req.body;
@@ -24,6 +51,7 @@ const initiateEsewaPayment = async (req, res) => {
       deliveryFee,
       total,
       paymentMethod: "ESEWA",
+      paymentStatus: "PENDING", // initially pending
       transaction_uuid,
     });
 
@@ -60,7 +88,7 @@ const initiateEsewaPayment = async (req, res) => {
   }
 };
 
-// 2️⃣ Success callback
+// 3️⃣ eSewa Success Callback
 const esewaSuccess = async (req, res) => {
   try {
     const { data } = req.query; // data is base64 or JSON string
@@ -69,7 +97,7 @@ const esewaSuccess = async (req, res) => {
 
     await Order.findOneAndUpdate(
       { transaction_uuid },
-      { paymentStatus: "PAID" }
+      { paymentStatus: "PAID" } // only update eSewa payments
     );
 
     res.redirect("http://localhost:5173/payment-success");
@@ -79,13 +107,15 @@ const esewaSuccess = async (req, res) => {
   }
 };
 
-// 3️⃣ Failure callback
+// 4️⃣ eSewa Failure Callback
 const esewaFailure = async (req, res) => {
   console.warn("eSewa payment failed", req.query);
   res.redirect("http://localhost:5173/payment-failed");
 };
+
 // ✅ EXPORTS
 module.exports = {
+  createCODOrder,
   initiateEsewaPayment,
   esewaSuccess,
   esewaFailure,
