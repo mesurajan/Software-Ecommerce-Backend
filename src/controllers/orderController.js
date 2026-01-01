@@ -1,5 +1,5 @@
 const Order = require("../models/Order");
-
+const notificationController = require("./notificationController")
 // GET all orders
 const getAllOrders = async (req, res) => {
   try {
@@ -79,6 +79,13 @@ const createOrder = async (req, res) => {
       transaction_uuid: req.body.transaction_uuid,
     });
 
+   await notificationController.createNotification({
+  title: "New Order Placed",
+  message: `Order ${order._id} placed by ${req.user.name}.`,
+  type: "order",
+  relatedId: order._id,
+});
+
     res.status(201).json({
       success: true,
       order,
@@ -88,6 +95,7 @@ const createOrder = async (req, res) => {
       success: false,
       message: error.message,
     });
+
   }
 };
 

@@ -1,7 +1,7 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const User = require("../models/UserModels");
-
+const notificationController = require("./notificationController");
 const JWT_SECRET = process.env.JWT_SECRET;
 
 // SIGNUP
@@ -29,6 +29,14 @@ exports.signup = async (req, res) => {
     });
 
     await newUser.save();
+
+   await notificationController.createNotification({
+  title: "New User Registered",
+  message: `User ${newUser.name} has signed up.`,
+  type: "user",
+  relatedId: newUser._id,
+});
+
 
     res.json({ message: "Signup successful", user: { email: newUser.email, role: newUser.role } });
   } catch (err) {

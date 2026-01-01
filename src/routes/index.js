@@ -15,6 +15,7 @@ const paymentRoutes = require("./paymentRoutes")
 const orderRoutes = require("./orderRoutes");
 const UserProfileRoutes =require("./UserProfileRoutes");
 const contactRoutes = require("./contactRoutes");
+const notificationRoutes = require("./notificationRoutes")
 // Mount routers
 router.use("/auth", authRoutes);
 router.use("/banner", bannerRoutes);
@@ -29,4 +30,6 @@ router.use("/payment", paymentRoutes);
 router.use("/orders", orderRoutes);
 router.use("/profile",UserProfileRoutes);
 router.use("/contact", contactRoutes);
+router.use("/notifications", notificationRoutes);
+
 module.exports = router;
