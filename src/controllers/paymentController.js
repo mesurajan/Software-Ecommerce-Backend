@@ -1,4 +1,5 @@
 const Order = require("../models/Order");
+const notificationController = require("./notificationController")
 const { v4: uuidv4 } = require("uuid");
 const crypto = require("crypto");
 
@@ -29,6 +30,13 @@ const createCODOrder = async (req, res) => {
       orderId,
     });
 
+    await notificationController.createNotification({
+  title: "Payment Successful",
+  message: `Payment for Order ${order._id} completed successfully.`,
+  type: "payment",
+  relatedId: order._id,
+});
+
     res.json({ success: true, message: "COD order created", order });
   } catch (err) {
     console.error(err);
@@ -43,7 +51,7 @@ const initiateEsewaPayment = async (req, res) => {
 
     const transaction_uuid = uuidv4();
 
-    await Order.create({
+    const order = await Order.create({
       user: req.user._id,     
       items,
       shipping,
@@ -54,6 +62,13 @@ const initiateEsewaPayment = async (req, res) => {
       paymentStatus: "PENDING", // initially pending
       transaction_uuid,
     });
+
+    await notificationController.createNotification({
+  title: "Payment Successful",
+  message: `Payment for Order ${order._id} completed successfully.`,
+  type: "payment",
+  relatedId: order._id,
+});
 
     const signed_field_names =
       "total_amount,transaction_uuid,product_code";
@@ -95,10 +110,21 @@ const esewaSuccess = async (req, res) => {
     const parsed = JSON.parse(Buffer.from(data, "base64").toString());
     const { transaction_uuid } = parsed;
 
-    await Order.findOneAndUpdate(
+    const order = await Order.findOneAndUpdate(
       { transaction_uuid },
-      { paymentStatus: "PAID" } // only update eSewa payments
+      { paymentStatus: "PAID" } ,
+      { new: true }// only update eSewa payments
     );
+     if (order) {
+      // 🔔 Notification for admin: payment completed
+        await notificationController.createNotification({
+        title: "Payment Successful",
+        message: `Payment for Order ${order._id} completed successfully.`,
+        type: "payment",
+        relatedId: order._id,
+      });
+  }
+
 
     res.redirect("http://localhost:5173/payment-success");
   } catch (err) {
